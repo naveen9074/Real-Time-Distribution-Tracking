@@ -19,6 +19,10 @@ const customerSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    assignedVehicleId: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );

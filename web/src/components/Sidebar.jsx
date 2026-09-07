@@ -4,6 +4,7 @@ export default function Sidebar({ page, setPage, connected }) {
   const nav = [
     { id: 'overview',   label: 'Overview',   icon: Icons.home },
     { id: 'orders',     label: 'Orders',     icon: Icons.orders },
+    { id: 'items',      label: 'Products & Items', icon: Icons.box },
     { id: 'customers',  label: 'Customers',  icon: Icons.customers },
     { id: 'van',        label: 'Vehicles & Stock', icon: Icons.van },
     { id: 'settings',   label: 'Settings',   icon: Icons.settings },

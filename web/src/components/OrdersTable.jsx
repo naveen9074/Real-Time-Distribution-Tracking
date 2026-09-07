@@ -100,22 +100,29 @@ export default function OrdersTable({ orders, newOrderId, loading = false }) {
                         <div className="w-8 h-8 rounded-lg bg-brand/15 flex items-center justify-center text-brand-light text-xs font-bold flex-shrink-0">
                           {order.customerName.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-medium text-slate-200">
-                          {order.customerName}
-                        </span>
+                        <div>
+                          <span className="font-medium text-slate-200 block">
+                            {order.customerName}
+                          </span>
+                          {Array.isArray(order.items) && order.items.length > 0 && (
+                            <span className="text-[11px] text-slate-400 truncate max-w-[200px] block" title={order.items.map((it) => `${it.quantity}× ${it.name}`).join(', ')}>
+                              {order.items.map((it) => `${it.quantity}× ${it.name}`).join(', ')}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
 
                     {/* Quantity badge */}
                     <td className="px-4 py-4 text-center">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 font-semibold text-sm">
-                        {order.quantity}
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded-lg bg-blue-500/10 text-blue-400 font-semibold text-xs">
+                        {order.quantity} units
                       </span>
                     </td>
 
                     {/* Revenue */}
                     <td className="px-6 py-4 text-right font-semibold text-emerald-400">
-                      {formatCurrency(order.totalPrice)}
+                      {formatCurrency(order.totalAmount || order.totalPrice)}
                     </td>
 
                     {/* Stock after — color-coded to urgency */}
@@ -129,7 +136,7 @@ export default function OrdersTable({ orders, newOrderId, loading = false }) {
                             : 'text-slate-300'
                         }`}
                       >
-                        {order.vehicleStockAfter} boxes
+                        {order.vehicleStockAfter} units
                       </span>
                     </td>
 

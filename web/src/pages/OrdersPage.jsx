@@ -212,19 +212,40 @@ export default function OrdersPage({ orders = [], newOrderId, loading }) {
                       </td>
 
                       {/* Vehicle */}
+                      {/* Vehicle */}
                       <td>
                         <span className="text-xs text-gray-300 font-medium flex items-center gap-1">
                           <span>🚐</span> {o.vehicleName || 'Vehicle 1'}
                         </span>
                       </td>
 
-                      {/* Quantity */}
+                      {/* Items / Quantity */}
                       <td>
-                        <span className="badge badge-blue text-xs">{o.quantity} boxes</span>
+                        {Array.isArray(o.items) && o.items.length > 0 ? (
+                          <div>
+                            <span className="badge badge-blue text-xs font-semibold">
+                              {o.quantity || o.items.reduce((a, b) => a + (b.quantity || 0), 0)} units
+                            </span>
+                            <div className="text-[10px] text-gray-400 mt-0.5 truncate max-w-[170px]" title={o.items.map((it) => `${it.quantity}× ${it.name}`).join(', ')}>
+                              {o.items.map((it) => `${it.quantity}× ${it.name}`).join(', ')}
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="badge badge-blue text-xs">{o.quantity} units</span>
+                            <div className="text-[10px] text-gray-400 mt-0.5">Dosa Batter (1kg)</div>
+                          </div>
+                        )}
                       </td>
 
-                      {/* Rate */}
-                      <td className="text-xs text-gray-400">₹{o.pricePerUnit || 60}/box</td>
+                      {/* Rate / Breakdown */}
+                      <td className="text-xs text-gray-400">
+                        {Array.isArray(o.items) && o.items.length > 1 ? (
+                          <span className="text-indigo-300 font-medium">{o.items.length} products</span>
+                        ) : (
+                          `₹${o.pricePerUnit || o.items?.[0]?.pricePerUnit || 60} / unit`
+                        )}
+                      </td>
 
                       {/* Total Amount */}
                       <td className="text-right">
@@ -236,9 +257,9 @@ export default function OrdersPage({ orders = [], newOrderId, loading }) {
                       {/* Stock after */}
                       <td className="text-right text-xs text-gray-400">
                         {o.stockAfter !== undefined
-                          ? `${o.stockAfter} boxes`
+                          ? `${o.stockAfter} units`
                           : o.vehicleStockAfter !== undefined
-                          ? `${o.vehicleStockAfter} boxes`
+                          ? `${o.vehicleStockAfter} units`
                           : '—'}
                       </td>
 
@@ -269,7 +290,7 @@ export default function OrdersPage({ orders = [], newOrderId, loading }) {
           className="modal-backdrop"
           onClick={(e) => e.target === e.currentTarget && setSelectedReceipt(null)}
         >
-          <div className="modal max-w-sm">
+          <div className="modal max-w-md w-full">
             <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
               <div>
                 <h3 className="text-sm font-bold text-white">🧾 Digital Bill Receipt</h3>
@@ -282,31 +303,58 @@ export default function OrdersPage({ orders = [], newOrderId, loading }) {
 
             <div className="space-y-3 bg-white/[0.02] p-4 rounded-xl border border-white/5 text-xs">
               <div className="flex justify-between">
-                <span className="text-gray-400">Store / Customer:</span>
+                <span className="text-gray-400">Customer Store:</span>
                 <span className="text-white font-bold">{selectedReceipt.storeName || selectedReceipt.customerName}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Delivery Vehicle:</span>
                 <span className="text-white">{selectedReceipt.vehicleName || 'Vehicle 1'}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Product:</span>
-                <span className="text-white">Dosa Batter (1kg Box)</span>
+
+              {/* Itemized Breakdown Table */}
+              <div className="border-t border-b border-white/5 py-2.5 my-2 space-y-2">
+                <div className="flex justify-between text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <span>Item</span>
+                  <span className="text-right">Qty × Rate = Total</span>
+                </div>
+
+                {Array.isArray(selectedReceipt.items) && selectedReceipt.items.length > 0 ? (
+                  selectedReceipt.items.map((it, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-xs py-1 border-t border-white/[0.03]">
+                      <div>
+                        <span className="text-white font-medium">{it.name}</span>
+                        <span className="text-[10px] text-gray-500 ml-1.5">({it.unit || 'unit'})</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-gray-400">{it.quantity} × ₹{it.pricePerUnit}</span>
+                        <span className="text-white font-bold ml-2">₹{it.subtotal || (it.quantity * it.pricePerUnit)}</span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex justify-between items-center text-xs py-1">
+                    <span className="text-white font-medium">Dosa Batter (1kg Box)</span>
+                    <div className="text-right">
+                      <span className="text-gray-400">{selectedReceipt.quantity} × ₹{selectedReceipt.pricePerUnit || 60}</span>
+                      <span className="text-white font-bold ml-2">₹{selectedReceipt.totalAmount || selectedReceipt.totalPrice}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Quantity Sold:</span>
-                <span className="text-indigo-300 font-bold">{selectedReceipt.quantity} boxes</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Rate:</span>
-                <span className="text-white">₹{selectedReceipt.pricePerUnit || 60} / box</span>
-              </div>
-              <div className="border-t border-white/5 pt-2 flex justify-between text-sm">
+
+              <div className="pt-1 flex justify-between text-sm">
                 <span className="text-white font-bold">Total Bill:</span>
-                <span className="text-emerald-400 font-black">
+                <span className="text-emerald-400 font-black text-base">
                   ₹{(selectedReceipt.totalAmount || selectedReceipt.totalPrice || 0).toLocaleString('en-IN')}
                 </span>
               </div>
+
+              {selectedReceipt.stockAfter !== undefined && (
+                <div className="pt-2 border-t border-white/5 flex justify-between text-[11px] text-gray-400">
+                  <span>Van Stock Remaining:</span>
+                  <span className="text-indigo-300 font-semibold">{selectedReceipt.stockAfter} units</span>
+                </div>
+              )}
             </div>
 
             <button onClick={() => setSelectedReceipt(null)} className="btn-secondary w-full mt-4 text-xs">

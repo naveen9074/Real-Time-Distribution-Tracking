@@ -44,3 +44,9 @@ yarn-error.log*
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Test captures / artifacts
+emulator_screen.png
+*.png
+!web/public/*.png
+!mobile/assets/*.png

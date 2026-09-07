@@ -178,7 +178,7 @@ export default function OverviewPage({
           </div>
         </div>
 
-        {/* Boxes Sold */}
+        {/* Units Sold */}
         <div className="kpi-card blue">
           <div className="flex justify-between items-start mb-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-500/10 text-indigo-400">
@@ -187,13 +187,13 @@ export default function OverviewPage({
             <span className="badge badge-blue text-[10px]">{rangeLabel}</span>
           </div>
           <div key={`boxes-${animKey}`} className="text-3xl font-black text-white">
-            {totalBoxesSold} <span className="text-lg font-normal text-gray-400">boxes</span>
+            {totalBoxesSold} <span className="text-lg font-normal text-gray-400">units</span>
           </div>
           <div className="text-xs text-gray-400 mt-1 font-semibold uppercase tracking-wider">
-            Total Boxes Sold
+            Total Units Sold
           </div>
           <div className="text-[11px] text-gray-500 mt-2">
-            Average: {filteredOrders.length > 0 ? (totalBoxesSold / filteredOrders.length).toFixed(1) : 0} boxes/order
+            Average: {filteredOrders.length > 0 ? (totalBoxesSold / filteredOrders.length).toFixed(1) : 0} units/order
           </div>
         </div>
 
@@ -206,7 +206,7 @@ export default function OverviewPage({
             <span className="badge badge-amber text-[10px]">{vehicles.length} Vehicles Active</span>
           </div>
           <div key={`stock-${animKey}`} className="text-3xl font-black text-white">
-            {totalFleetStock} <span className="text-lg font-normal text-gray-400">boxes</span>
+            {totalFleetStock} <span className="text-lg font-normal text-gray-400">units</span>
           </div>
           <div className="text-xs text-gray-400 mt-1 font-semibold uppercase tracking-wider">
             Total Van Stock in Field

@@ -102,9 +102,15 @@ export default function HomeScreen({ navigation, route }) {
       pricePerUnit: 60,
     };
 
-  const stock = Number(activeVehicle.stock || 0);
-  const price = Number(activeVehicle.pricePerUnit || 60);
-  const stockPct = Math.min((stock / 50) * 100, 100);
+  const itemsList = Array.isArray(activeVehicle.items) && activeVehicle.items.length > 0
+    ? activeVehicle.items
+    : [
+        { itemId: 'item_001', name: 'Dosa Batter (1kg)', unit: 'Box', stock: Number(activeVehicle.stock || 50), price: Number(activeVehicle.pricePerUnit || 60) }
+      ];
+
+  const stock = itemsList.reduce((acc, it) => acc + Number(it.stock || 0), 0);
+  const totalLoadedValue = itemsList.reduce((acc, it) => acc + (Number(it.stock || 0) * Number(it.price || 0)), 0);
+  const stockPct = Math.min((stock / 60) * 100, 100);
   const stockColor = stock <= 5 ? C.danger : stock <= 15 ? C.warning : C.success;
   const stockLabel =
     stock <= 5 ? '🔴 Critically Low' : stock <= 15 ? '🟡 Running Low' : '🟢 Well Stocked';
@@ -191,11 +197,11 @@ export default function HomeScreen({ navigation, route }) {
             <Animated.Text style={[styles.stockNumber, { color: stockColor }, stockAnim]}>
               {stock}
             </Animated.Text>
-            <Text style={styles.stockUnit}>boxes in van</Text>
+            <Text style={styles.stockUnit}>units in van ({itemsList.length} products)</Text>
 
             <View style={styles.stockMeta}>
               <Text style={[styles.stockStatus, { color: stockColor }]}>{stockLabel}</Text>
-              <Text style={styles.priceTag}>₹{price}/box</Text>
+              <Text style={styles.priceTag}>Total Value: ₹{totalLoadedValue.toLocaleString('en-IN')}</Text>
             </View>
 
             {/* Progress bar */}
@@ -203,9 +209,28 @@ export default function HomeScreen({ navigation, route }) {
               <View style={[styles.barFill, { width: `${stockPct}%`, backgroundColor: stockColor }]} />
             </View>
             <View style={styles.barMetaRow}>
-              <Text style={styles.barMeta}>{stock} boxes remaining</Text>
-              <Text style={styles.barMeta}>Total Value: ₹{stock * price}</Text>
+              <Text style={styles.barMeta}>{stock} units remaining</Text>
+              <Text style={styles.barMeta}>Capacity: ~60 units</Text>
             </View>
+
+            {/* Loaded Products Mini Breakdown */}
+            {itemsList.length > 0 && (
+              <View style={{ marginTop: 14, paddingTop: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' }}>
+                <Text style={{ fontSize: 10, color: C.muted, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 }}>
+                  Loaded Products Breakdown
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {itemsList.map(it => (
+                    <View key={it.itemId} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(255,255,255,0.04)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: C.border }}>
+                      <Text style={{ fontSize: 11, color: C.text, fontWeight: '700' }}>{it.name}</Text>
+                      <Text style={{ fontSize: 11, color: Number(it.stock || 0) > 0 ? C.brandLight : C.danger, fontWeight: '800' }}>
+                        {it.stock} {it.unit || 'units'}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
           </LinearGradient>
         </Animated.View>
 

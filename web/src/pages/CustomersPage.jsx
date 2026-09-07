@@ -1,20 +1,36 @@
 import { useEffect, useState } from 'react';
-import { listenCustomers, addCustomer, updateCustomer, removeCustomer } from '../firebase.js';
+import {
+  listenCustomers,
+  addCustomer,
+  updateCustomer,
+  removeCustomer,
+  assignCustomerToVehicle,
+} from '../firebase.js';
 import { Icons } from '../lib/icons.jsx';
 
-export default function CustomersPage({ toast }) {
+export default function CustomersPage({ toast, vehicles = [] }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   // Add Modal
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addForm, setAddForm] = useState({ name: '', address: '', phone: '' });
+  const [addForm, setAddForm] = useState({
+    name: '',
+    address: '',
+    phone: '',
+    assignedVehicleId: '',
+  });
   const [savingAdd, setSavingAdd] = useState(false);
 
   // Edit Modal
   const [editCustomerObj, setEditCustomerObj] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', address: '', phone: '' });
+  const [editForm, setEditForm] = useState({
+    name: '',
+    address: '',
+    phone: '',
+    assignedVehicleId: '',
+  });
   const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => {
@@ -36,9 +52,10 @@ export default function CustomersPage({ toast }) {
         name: addForm.name.trim(),
         address: addForm.address.trim(),
         phone: addForm.phone.trim(),
+        assignedVehicleId: addForm.assignedVehicleId || null,
       });
       toast?.success?.(`"${addForm.name}" added successfully!`);
-      setAddForm({ name: '', address: '', phone: '' });
+      setAddForm({ name: '', address: '', phone: '', assignedVehicleId: '' });
       setShowAddModal(false);
     } catch (e) {
       toast?.error?.(e.message || 'Failed to add customer');
@@ -58,6 +75,7 @@ export default function CustomersPage({ toast }) {
         name: editForm.name.trim(),
         address: editForm.address.trim(),
         phone: editForm.phone.trim(),
+        assignedVehicleId: editForm.assignedVehicleId || null,
       });
       toast?.success?.(`Updated "${editForm.name}"!`);
       setEditCustomerObj(null);
@@ -157,6 +175,32 @@ export default function CustomersPage({ toast }) {
                     📍 {c.address}
                   </p>
                 )}
+
+                {/* Route Assignment Selector */}
+                <div className="mt-3.5 pt-3 border-t border-white/5 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-gray-400 font-medium">Assigned Route:</span>
+                  <select
+                    value={c.assignedVehicleId || ''}
+                    onChange={async (e) => {
+                      const val = e.target.value || null;
+                      try {
+                        await assignCustomerToVehicle(c.id, val);
+                        const vName = val ? vehicles.find((v) => v.id === val)?.name || 'Vehicle' : 'None';
+                        toast?.success?.(`"${c.name}" assigned to ${vName}`);
+                      } catch {
+                        toast?.error?.('Failed to update route');
+                      }
+                    }}
+                    className="text-[11px] font-medium bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-gray-200 focus:outline-none focus:border-indigo-500 cursor-pointer max-w-[160px] truncate"
+                  >
+                    <option value="" className="bg-[#0f1320] text-gray-400">Unassigned</option>
+                    {vehicles.map((v) => (
+                      <option key={v.id} value={v.id} className="bg-[#0f1320] text-white">
+                        🚐 {v.name} ({v.driverName || 'Driver'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Action buttons (Edit & Delete) */}
@@ -168,6 +212,7 @@ export default function CustomersPage({ toast }) {
                       name: c.name || '',
                       address: c.address || '',
                       phone: c.phone || '',
+                      assignedVehicleId: c.assignedVehicleId || '',
                     });
                   }}
                   className="text-[11px] font-semibold text-indigo-300 hover:text-white px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
@@ -233,6 +278,21 @@ export default function CustomersPage({ toast }) {
                   onChange={(e) => setAddForm((f) => ({ ...f, phone: e.target.value }))}
                 />
               </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-300 block mb-1">Assign to Delivery Route / Vehicle</label>
+                <select
+                  className="input text-xs"
+                  value={addForm.assignedVehicleId || ''}
+                  onChange={(e) => setAddForm((f) => ({ ...f, assignedVehicleId: e.target.value }))}
+                >
+                  <option value="">Unassigned (Select later)</option>
+                  {vehicles.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      🚐 {v.name} ({v.driverName || 'Driver'})
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="flex gap-2 mt-6">
@@ -293,6 +353,21 @@ export default function CustomersPage({ toast }) {
                   value={editForm.phone}
                   onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
                 />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-300 block mb-1">Assign to Delivery Route / Vehicle</label>
+                <select
+                  className="input text-xs"
+                  value={editForm.assignedVehicleId || ''}
+                  onChange={(e) => setEditForm((f) => ({ ...f, assignedVehicleId: e.target.value }))}
+                >
+                  <option value="">Unassigned</option>
+                  {vehicles.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      🚐 {v.name} ({v.driverName || 'Driver'})
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

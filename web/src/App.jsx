@@ -3,6 +3,7 @@ import { useToast } from './lib/useToast.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import OverviewPage from './pages/OverviewPage.jsx';
 import OrdersPage from './pages/OrdersPage.jsx';
+import ItemsPage from './pages/ItemsPage.jsx';
 import CustomersPage from './pages/CustomersPage.jsx';
 import VanPage from './pages/VanPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
@@ -10,6 +11,8 @@ import {
   ensureInitialData,
   listenVehicles,
   listenOrders,
+  listenCustomers,
+  listenItems,
 } from './firebase.js';
 
 export default function App() {
@@ -19,12 +22,14 @@ export default function App() {
 
   const [vehicles, setVehicles] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newOrderId, setNewOrderId] = useState(null);
   const [animKey, setAnimKey] = useState(0);
 
   useEffect(() => {
-    // 1. Seed initial data (vehicles + sample stores)
+    // 1. Seed initial data (vehicles + sample stores + product catalog)
     ensureInitialData().catch(console.error);
 
     // 2. Real-time Vehicles listener
@@ -34,7 +39,17 @@ export default function App() {
       setLoading(false);
     });
 
-    // 3. Real-time Orders listener
+    // 3. Real-time Customers listener
+    const unsubCustomers = listenCustomers((list) => {
+      setCustomers(list);
+    });
+
+    // 4. Real-time Items listener
+    const unsubItems = listenItems((list) => {
+      setItems(list);
+    });
+
+    // 5. Real-time Orders listener
     let isFirst = true;
     const unsubOrders = listenOrders((list) => {
       setOrders((prev) => {
@@ -44,7 +59,7 @@ export default function App() {
           setNewOrderId(id);
           setAnimKey((k) => k + 1);
           toast.success(
-            `🛒 Sale to ${latest.storeName || latest.customerName} — ₹${latest.totalAmount || latest.totalPrice} (${latest.quantity} boxes)`
+            `🛒 Sale to ${latest.storeName || latest.customerName} — ₹${latest.totalAmount || latest.totalPrice} (${latest.quantity} items)`
           );
           setTimeout(() => setNewOrderId(null), 6000);
         }
@@ -55,6 +70,8 @@ export default function App() {
 
     return () => {
       unsubVehicles();
+      unsubCustomers();
+      unsubItems();
       unsubOrders();
     };
   }, []);
@@ -63,6 +80,8 @@ export default function App() {
     const commonProps = {
       vehicles,
       orders,
+      customers,
+      items,
       newOrderId,
       loading,
       animKey,
@@ -75,10 +94,12 @@ export default function App() {
         return <OverviewPage {...commonProps} />;
       case 'orders':
         return <OrdersPage {...commonProps} />;
+      case 'items':
+        return <ItemsPage items={items} vehicles={vehicles} toast={toast} />;
       case 'customers':
-        return <CustomersPage toast={toast} />;
+        return <CustomersPage toast={toast} vehicles={vehicles} customersList={customers} />;
       case 'van':
-        return <VanPage vehicles={vehicles} toast={toast} />;
+        return <VanPage vehicles={vehicles} customers={customers} items={items} toast={toast} />;
       case 'settings':
         return <SettingsPage />;
       default:
